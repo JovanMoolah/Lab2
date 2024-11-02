@@ -1,0 +1,77 @@
+#include <p18f4550.h>
+
+#include "FSIO.h"
+
+#define bfrsize 1
+
+
+
+void initialize ()
+{
+    ADCON1 |= 0x0F; //Set all pints to digital
+  
+    INTCON2bits.RBPU = 0; // Enable pull up whe sd card is not connected
+    
+    MDD_SDSPI_InitIO(); //initializes the I/O pins connected to the SD card.
+}
+
+void read(char a , char b)  // function to read data in file
+{
+    FSFILE *pReadFile; //variable for reading file
+    char myData = a ;  //data variable in file
+    char bfr = b;     // buffer variable for data in file
+    int bytesRead;    // variable for reading bytes in file
+    pReadFile =  FSfopenpgm ("myfile.txt", "r"); // open a file called myfile in read mode
+    bytesRead = FSfread((void*)myData, 1, 1, pReadFile);   //   read data of sized 1 byte
+    bytesRead = FSfread( (void *)bfr, 1, bfrsize, pReadFile );  // read 1 item of size 1 byte and return item count
+    FSfclose( pReadFile );  // close file 
+}
+
+
+void write(char a , char b) // function to write data in file
+{   
+    char myData  = a;   //data variable in file
+    char bfr  = b;        // buffer variable for data in file
+    FSFILE *pWriteFile;   //variable for writing to file
+    int bytesWritten;     // // variable for writing bytes in file
+    pWriteFile = FSfopenpgm ("newFile.txt", "w"); // open a file called newfile in writing mode
+    
+    bytesWritten = FSfwrite ((void *) myData, 1, 1, pWriteFile);   //   write data of sized 1 byte
+    bytesWritten = FSfwrite ((void *) bfr, 1, bfrsize, pWriteFile);  // write 1 item of size 1 byte to file
+    FSfclose( pWriteFile );  // close file
+}
+
+void FileSearchandDel (char filename [])  // function to find a file in a directory and delete it.
+{    
+    
+     unsigned char attributes = ATTR_ARCHIVE | ATTR_READ_ONLY | ATTR_HIDDEN;  
+     
+     SearchRec file;  // pointer to required file structure
+     
+     char name [] = filename;
+      
+     if (FindFirstpgm (name, attributes, &file))  // find txt file that has name starting with "FILE
+     {
+         FSremove (file.filename); // delete file if it is found in a directory
+     }
+	
+		
+
+}
+
+void main (void) {
+    
+    initialize ();
+    
+    char dat  = 'd';  // example data initialization 
+    char buf  = 'b';  // example buffer initialization 
+    
+    read(dat, buf );  // read data to a file 
+    write(dat, buf);  // write data from read file to another file
+    
+    FileSearchandDel ('test'); // find file with name test and delete it
+   
+
+    return;
+       
+}
